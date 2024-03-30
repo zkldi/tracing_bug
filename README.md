@@ -25,7 +25,7 @@ This bug occurs when there are multiple subscribers to tracing, i.e.
         .with(stdout)
         // VVVV this is the line that causes the panic!!
         // commenting this out will result in a working app.
-        .with(tracing_tracy::TracyLayer::default());
+        .with(CustomSubscriber);
 ```
 
 I initially thought that this was because of `tracing-tracy` specifically, but it is not. The same issue occurs if you have multiple `.with()` statements, so long as both of them aren't to stdout.
@@ -34,4 +34,4 @@ manifesting finally in a panic inside `sharded_slab`, for some reason.
 
 ## Fix
 
-No idea. If you're having this issue, I'm having it too. Turn off tracing-tracy, I guess.
+No idea. If you're having this issue, I'm having it too. Turn off all other loggers I guess.
