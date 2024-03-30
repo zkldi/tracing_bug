@@ -1,6 +1,6 @@
 # tracing_subscriber bug
 
-Seems to be a bad interaction with **having multiple tracing_subscribers** and `eframe` or `egui`.
+Seems to be a bad interaction with **having a custom tracing::Subscriber** and `eframe` or `egui`.
 
 It's triggered by doing `cargo run` and then closing the app. You will get a panic a-la:
 
@@ -19,19 +19,24 @@ and so on
 
 ## Trigger
 
-This bug occurs when there are multiple subscribers to tracing, i.e.
+This bug occurs when there is a custom subscriber to tracing, i.e.
 ```rs
     let subscriber = tracing_subscriber::registry()
+        // this works fine; any amount of stdout stuff is totally fine
         .with(stdout)
         // VVVV this is the line that causes the panic!!
         // commenting this out will result in a working app.
+        // but any bespoke impl of tracing::Subscriber seems to cause this.
         .with(CustomSubscriber);
 ```
 
-I initially thought that this was because of `tracing-tracy` specifically, but it is not. The same issue occurs if you have multiple `.with()` statements, so long as both of them aren't to stdout.
+I initially thought that this was because of `tracing-tracy` specifically, but it is not.
 
-manifesting finally in a panic inside `sharded_slab`, for some reason.
+It manifests finally in a panic inside `sharded_slab`, for some reason.
 
 ## Fix
 
-No idea. If you're having this issue, I'm having it too. Turn off all other loggers I guess.
+No idea. If you're having this issue, I'm having it too. Don't use custom logging, I guess.
+
+This applies to a bunch of crates that define their own subscribers, like `tracing-tracy`, but for some reason doesn't apply to tracings built-in subscribers, like `fmt::layer()`
+

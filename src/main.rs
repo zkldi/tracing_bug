@@ -1,17 +1,12 @@
 use tracing::Subscriber;
-use tracing_subscriber::{layer::SubscriberExt, EnvFilter, Layer};
+use tracing_subscriber::{layer::SubscriberExt, Layer};
+
+pub struct CustomSubscriber;
+
+impl<S: Subscriber> Layer<S> for CustomSubscriber {}
 
 fn main() -> Result<(), eframe::Error> {
-    let stdout = tracing_subscriber::fmt::layer()
-        .pretty()
-        .with_writer(std::io::stdout)
-        .with_filter(EnvFilter::from_default_env());
-
-    let subscriber = tracing_subscriber::registry()
-        .with(stdout)
-        // VVVV this is the line that causes the panic!!
-        // commenting this out will result in a working app.
-        .with(CustomSubscriber);
+    let subscriber = tracing_subscriber::registry().with(CustomSubscriber);
 
     tracing::subscriber::set_global_default(subscriber).expect("failed to open log channels");
 
@@ -31,7 +26,3 @@ impl eframe::App for App {
         });
     }
 }
-
-pub struct CustomSubscriber;
-
-impl<S: Subscriber> Layer<S> for CustomSubscriber {}
