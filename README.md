@@ -1,8 +1,6 @@
 # tracing_subscriber bug
 
-Seems to be a bad interaction with `tracing-tracy` and `eframe` or `egui`.
-
-This is the most minimal reproduction I could get for the bug.
+Seems to be a bad interaction with **having multiple tracing_subscribers** and `eframe` or `egui`.
 
 It's triggered by doing `cargo run` and then closing the app. You will get a panic a-la:
 
@@ -21,7 +19,7 @@ and so on
 
 ## Trigger
 
-This bug only occurs when `tracing-tracy` is a subscriber to tracing, i.e.
+This bug occurs when there are multiple subscribers to tracing, i.e.
 ```rs
     let subscriber = tracing_subscriber::registry()
         .with(stdout)
@@ -30,12 +28,7 @@ This bug only occurs when `tracing-tracy` is a subscriber to tracing, i.e.
         .with(tracing_tracy::TracyLayer::default());
 ```
 
-I thought the bug might be something to do with having two subscribers to the tracing_subscriber registry, but no issue seems to occur if you have two stdout subscribers.
-
-I suspect this is a weird poor interaction between
-- eframe
-- tracing_tracy
-- tracing_subscriber
+I initially thought that this was because of `tracing-tracy` specifically, but it is not. The same issue occurs if you have multiple `.with()` statements, so long as both of them aren't to stdout.
 
 manifesting finally in a panic inside `sharded_slab`, for some reason.
 
